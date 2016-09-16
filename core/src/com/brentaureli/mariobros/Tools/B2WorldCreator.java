@@ -35,7 +35,7 @@ public class B2WorldCreator {
         Body body;
 
         //create ground bodies/fixtures
-        for(MapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)){
+        for(MapObject object : map.getLayers().get(1).getObjects().getByType(RectangleMapObject.class)){
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
             bdef.type = BodyDef.BodyType.StaticBody;
@@ -45,11 +45,12 @@ public class B2WorldCreator {
 
             shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
             fdef.shape = shape;
+            fdef.restitution = 0.01f;
             body.createFixture(fdef);
         }
 
         //create pipe bodies/fixtures
-        for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){
+  /*      for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
 
             bdef.type = BodyDef.BodyType.StaticBody;
@@ -62,9 +63,9 @@ public class B2WorldCreator {
             fdef.filter.categoryBits = MarioBros.OBJECT_BIT;
             body.createFixture(fdef);
         }
-
+*/
         //create brick bodies/fixtures
-        for(MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)){
+ /*       for(MapObject object : map.getLayers().get(5).getObjects().getByType(RectangleMapObject.class)){
             new Brick(screen, object);
         }
 
@@ -73,9 +74,9 @@ public class B2WorldCreator {
 
             new Coin(screen, object);
         }
-
+*/
         //create all goombas
-        goombas = new Array<Goomba>();
+   /*     goombas = new Array<Goomba>();
         for(MapObject object : map.getLayers().get(6).getObjects().getByType(RectangleMapObject.class)){
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
             goombas.add(new Goomba(screen, rect.getX() / MarioBros.PPM, rect.getY() / MarioBros.PPM));
@@ -84,7 +85,7 @@ public class B2WorldCreator {
         for(MapObject object : map.getLayers().get(7).getObjects().getByType(RectangleMapObject.class)){
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
             turtles.add(new Turtle(screen, rect.getX() / MarioBros.PPM, rect.getY() / MarioBros.PPM));
-        }
+        }*/
     }
 
     public Array<Goomba> getGoombas() {

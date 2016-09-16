@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.brentaureli.mariobros.MarioBros;
 import com.brentaureli.mariobros.Scenes.Hud;
+import com.brentaureli.mariobros.Sprites.Ball;
 import com.brentaureli.mariobros.Sprites.Enemies.Enemy;
 import com.brentaureli.mariobros.Sprites.Items.Item;
 import com.brentaureli.mariobros.Sprites.Items.ItemDef;
@@ -55,6 +56,7 @@ public class PlayScreen implements Screen{
 
     //sprites
     private Mario player;
+    private Ball ball;
 
     private Music music;
 
@@ -77,7 +79,7 @@ public class PlayScreen implements Screen{
 
         //Load our map and setup our map renderer
         maploader = new TmxMapLoader();
-        map = maploader.load("level1.tmx");
+        map = maploader.load("level3.tmx");
         renderer = new OrthogonalTiledMapRenderer(map, 1  / MarioBros.PPM);
 
         //initially set our gamcam to be centered correctly at the start of of map
@@ -92,7 +94,8 @@ public class PlayScreen implements Screen{
 
         //create mario in our game world
         player = new Mario(this);
-
+    //player.setPosition(MarioBros.V_WIDTH/2,MarioBros.V_HEIGHT);
+        ball = new Ball(this);
         world.setContactListener(new WorldContactListener());
 
         music = MarioBros.manager.get("audio/music/mario_music.ogg", Music.class);
@@ -138,8 +141,7 @@ public class PlayScreen implements Screen{
                 player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && player.b2body.getLinearVelocity().x >= -2)
                 player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
-            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
-                player.fire();
+
         }
 
     }
@@ -153,23 +155,24 @@ public class PlayScreen implements Screen{
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
-        for(Enemy enemy : creator.getEnemies()) {
+        ball.update(dt);
+ /*       for(Enemy enemy : creator.getEnemies()) {
             enemy.update(dt);
             if(enemy.getX() < player.getX() + 224 / MarioBros.PPM) {
                 enemy.b2body.setActive(true);
             }
         }
-
+*/
         for(Item item : items)
             item.update(dt);
 
         hud.update(dt);
 
         //attach our gamecam to our players.x coordinate
-        if(player.currentState != Mario.State.DEAD) {
+     /*   if(player.currentState != Mario.State.DEAD) {
             gamecam.position.x = player.b2body.getPosition().x;
         }
-
+*/
         //update our gamecam with correct coordinates after changes
         gamecam.update();
         //tell our renderer to draw only what our camera can see in our game world.
@@ -196,10 +199,11 @@ public class PlayScreen implements Screen{
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();
         player.draw(game.batch);
-        for (Enemy enemy : creator.getEnemies())
+        ball.draw(game.batch);
+ /*       for (Enemy enemy : creator.getEnemies())
             enemy.draw(game.batch);
         for (Item item : items)
-            item.draw(game.batch);
+            item.draw(game.batch);*/
         game.batch.end();
 
         //Set our batch to now draw what the Hud camera sees.

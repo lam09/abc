@@ -10,8 +10,8 @@ import com.brentaureli.mariobros.Screens.PlayScreen;
 
 public class MarioBros extends Game {
 	//Virtual Screen size and Box2D Scale(Pixels Per Meter)
-	public static final int V_WIDTH = 400;
-	public static final int V_HEIGHT = 208;
+	public static final int V_WIDTH = 30*16;
+	public static final int V_HEIGHT = 50*16;
 	public static final float PPM = 100;
 
 	//Box2D Collision Bits
@@ -27,6 +27,7 @@ public class MarioBros extends Game {
 	public static final short ITEM_BIT = 256;
 	public static final short MARIO_HEAD_BIT = 512;
 	public static final short FIREBALL_BIT = 1024;
+	public static final short BALL_BIT = 4;
 
 	public SpriteBatch batch;
 

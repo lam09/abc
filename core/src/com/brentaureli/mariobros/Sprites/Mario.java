@@ -1,5 +1,6 @@
 package com.brentaureli.mariobros.Sprites;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -51,11 +52,12 @@ public class Mario extends Sprite {
     private PlayScreen screen;
 
     private Array<FireBall> fireballs;
-
+    private Vector2 startPosition;
     public Mario(PlayScreen screen){
         //initialize default values
         this.screen = screen;
         this.world = screen.getWorld();
+        startPosition = new Vector2(128 / MarioBros.PPM,128/ MarioBros.PPM);
         currentState = State.STANDING;
         previousState = State.STANDING;
         stateTimer = 0;
@@ -96,12 +98,11 @@ public class Mario extends Sprite {
         marioDead = new TextureRegion(screen.getAtlas().findRegion("little_mario"), 96, 0, 16, 16);
 
         //define mario in Box2d
-        defineMario();
+        defineMario(startPosition);
 
         //set initial values for marios location, width and height. And initial frame as marioStand.
         setBounds(0, 0, 16 / MarioBros.PPM, 16 / MarioBros.PPM);
         setRegion(marioStand);
-
         fireballs = new Array<FireBall>();
 
     }
@@ -117,106 +118,20 @@ public class Mario extends Sprite {
         }
 
         //update our sprite to correspond with the position of our Box2D body
-        if(marioIsBig)
-            setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2 - 6 / MarioBros.PPM);
-        else
             setPosition(b2body.getPosition().x - getWidth() / 2, b2body.getPosition().y - getHeight() / 2);
         //update sprite with the correct frame depending on marios current action
-        setRegion(getFrame(dt));
-        if(timeToDefineBigMario)
-            defineBigMario();
-        if(timeToRedefineMario)
-            redefineMario();
-
-        for(FireBall  ball : fireballs) {
-            ball.update(dt);
-            if(ball.isDestroyed())
-                fireballs.removeValue(ball, true);
+        if(Gdx.input.isTouched())
+        {
+            Vector2 touchPoint = new Vector2(Gdx.input.getX()/MarioBros.PPM,Gdx.input.getY()/MarioBros.PPM);
+          //  b2body.applyLinearImpulse(startPosition, touchPoint, true);
+            System.out.print("touch point " + touchPoint.x + " " + touchPoint.y);
+            //b2body.setLinearVelocity(touchPoint);
+            b2body.setTransform(new Vector2(1,1),0);
         }
 
     }
 
-    public TextureRegion getFrame(float dt){
-        //get marios current state. ie. jumping, running, standing...
-        currentState = getState();
 
-        TextureRegion region;
-
-        //depending on the state, get corresponding animation keyFrame.
-        switch(currentState){
-            case DEAD:
-                region = marioDead;
-                break;
-            case GROWING:
-                region = growMario.getKeyFrame(stateTimer);
-                if(growMario.isAnimationFinished(stateTimer)) {
-                    runGrowAnimation = false;
-                }
-                break;
-            case JUMPING:
-                region = marioIsBig ? bigMarioJump : marioJump;
-                break;
-            case RUNNING:
-                region = marioIsBig ? bigMarioRun.getKeyFrame(stateTimer, true) : marioRun.getKeyFrame(stateTimer, true);
-                break;
-            case FALLING:
-            case STANDING:
-            default:
-                region = marioIsBig ? bigMarioStand : marioStand;
-                break;
-        }
-
-        //if mario is running left and the texture isnt facing left... flip it.
-        if((b2body.getLinearVelocity().x < 0 || !runningRight) && !region.isFlipX()){
-            region.flip(true, false);
-            runningRight = false;
-        }
-
-        //if mario is running right and the texture isnt facing right... flip it.
-        else if((b2body.getLinearVelocity().x > 0 || runningRight) && region.isFlipX()){
-            region.flip(true, false);
-            runningRight = true;
-        }
-
-        //if the current state is the same as the previous state increase the state timer.
-        //otherwise the state has changed and we need to reset timer.
-        stateTimer = currentState == previousState ? stateTimer + dt : 0;
-        //update previous state
-        previousState = currentState;
-        //return our final adjusted frame
-        return region;
-
-    }
-
-    public State getState(){
-        //Test to Box2D for velocity on the X and Y-Axis
-        //if mario is going positive in Y-Axis he is jumping... or if he just jumped and is falling remain in jump state
-        if(marioIsDead)
-            return State.DEAD;
-        else if(runGrowAnimation)
-            return State.GROWING;
-        else if((b2body.getLinearVelocity().y > 0 && currentState == State.JUMPING) || (b2body.getLinearVelocity().y < 0 && previousState == State.JUMPING))
-            return State.JUMPING;
-        //if negative in Y-Axis mario is falling
-        else if(b2body.getLinearVelocity().y < 0)
-            return State.FALLING;
-        //if mario is positive or negative in the X axis he is running
-        else if(b2body.getLinearVelocity().x != 0)
-            return State.RUNNING;
-        //if none of these return then he must be standing
-        else
-            return State.STANDING;
-    }
-
-    public void grow(){
-        if( !isBig() ) {
-            runGrowAnimation = true;
-            marioIsBig = true;
-            timeToDefineBigMario = true;
-            setBounds(getX(), getY(), getWidth(), getHeight() * 2);
-            MarioBros.manager.get("audio/sounds/powerup.wav", Sound.class).play();
-        }
-    }
 
     public void die() {
 
@@ -270,115 +185,29 @@ public class Mario extends Sprite {
         }
     }
 
-    public void redefineMario(){
-        Vector2 position = b2body.getPosition();
-        world.destroyBody(b2body);
 
+    public void defineMario(Vector2 position){
         BodyDef bdef = new BodyDef();
         bdef.position.set(position);
+    //    bdef.position.set(MarioBros.V_WIDTH/2,MarioBros.V_HEIGHT/2);
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
-
         FixtureDef fdef = new FixtureDef();
         CircleShape shape = new CircleShape();
-        shape.setRadius(6 / MarioBros.PPM);
+        shape.setRadius(32 / MarioBros.PPM);
+        fdef.density = 30;
         fdef.filter.categoryBits = MarioBros.MARIO_BIT;
         fdef.filter.maskBits = MarioBros.GROUND_BIT |
-                MarioBros.COIN_BIT |
-                MarioBros.BRICK_BIT |
-                MarioBros.ENEMY_BIT |
-                MarioBros.OBJECT_BIT |
-                MarioBros.ENEMY_HEAD_BIT |
-                MarioBros.ITEM_BIT;
+                MarioBros.BRICK_BIT ;
+
 
         fdef.shape = shape;
+      //  fdef.friction = 0.1f;
+       // fdef.restitution = 0.9f;
         b2body.createFixture(fdef).setUserData(this);
-
-        EdgeShape head = new EdgeShape();
-        head.set(new Vector2(-2 / MarioBros.PPM, 6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, 6 / MarioBros.PPM));
-        fdef.filter.categoryBits = MarioBros.MARIO_HEAD_BIT;
-        fdef.shape = head;
-        fdef.isSensor = true;
-
-        b2body.createFixture(fdef).setUserData(this);
-
-        timeToRedefineMario = false;
-
-    }
-
-    public void defineBigMario(){
-        Vector2 currentPosition = b2body.getPosition();
-        world.destroyBody(b2body);
-
-        BodyDef bdef = new BodyDef();
-        bdef.position.set(currentPosition.add(0, 10 / MarioBros.PPM));
-        bdef.type = BodyDef.BodyType.DynamicBody;
-        b2body = world.createBody(bdef);
-
-        FixtureDef fdef = new FixtureDef();
-        CircleShape shape = new CircleShape();
-        shape.setRadius(6 / MarioBros.PPM);
-        fdef.filter.categoryBits = MarioBros.MARIO_BIT;
-        fdef.filter.maskBits = MarioBros.GROUND_BIT |
-                MarioBros.COIN_BIT |
-                MarioBros.BRICK_BIT |
-                MarioBros.ENEMY_BIT |
-                MarioBros.OBJECT_BIT |
-                MarioBros.ENEMY_HEAD_BIT |
-                MarioBros.ITEM_BIT;
-
-        fdef.shape = shape;
-        b2body.createFixture(fdef).setUserData(this);
-        shape.setPosition(new Vector2(0, -14 / MarioBros.PPM));
-        b2body.createFixture(fdef).setUserData(this);
-
-        EdgeShape head = new EdgeShape();
-        head.set(new Vector2(-2 / MarioBros.PPM, 6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, 6 / MarioBros.PPM));
-        fdef.filter.categoryBits = MarioBros.MARIO_HEAD_BIT;
-        fdef.shape = head;
-        fdef.isSensor = true;
-
-        b2body.createFixture(fdef).setUserData(this);
-        timeToDefineBigMario = false;
-    }
-
-    public void defineMario(){
-        BodyDef bdef = new BodyDef();
-        bdef.position.set(32 / MarioBros.PPM, 32 / MarioBros.PPM);
-        bdef.type = BodyDef.BodyType.DynamicBody;
-        b2body = world.createBody(bdef);
-
-        FixtureDef fdef = new FixtureDef();
-        CircleShape shape = new CircleShape();
-        shape.setRadius(6 / MarioBros.PPM);
-        fdef.filter.categoryBits = MarioBros.MARIO_BIT;
-        fdef.filter.maskBits = MarioBros.GROUND_BIT |
-                MarioBros.COIN_BIT |
-                MarioBros.BRICK_BIT |
-                MarioBros.ENEMY_BIT |
-                MarioBros.OBJECT_BIT |
-                MarioBros.ENEMY_HEAD_BIT |
-                MarioBros.ITEM_BIT;
-
-        fdef.shape = shape;
-        b2body.createFixture(fdef).setUserData(this);
-
-        EdgeShape head = new EdgeShape();
-        head.set(new Vector2(-2 / MarioBros.PPM, 6 / MarioBros.PPM), new Vector2(2 / MarioBros.PPM, 6 / MarioBros.PPM));
-        fdef.filter.categoryBits = MarioBros.MARIO_HEAD_BIT;
-        fdef.shape = head;
-        fdef.isSensor = true;
-
-        b2body.createFixture(fdef).setUserData(this);
-    }
-
-    public void fire(){
-        fireballs.add(new FireBall(screen, b2body.getPosition().x, b2body.getPosition().y, runningRight ? true : false));
     }
 
     public void draw(Batch batch){
         super.draw(batch);
-        for(FireBall ball : fireballs)
-            ball.draw(batch);
     }
 }
