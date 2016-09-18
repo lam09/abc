@@ -11,7 +11,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -19,8 +18,9 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.brentaureli.mariobros.MarioBros;
 import com.brentaureli.mariobros.Screens.PlayScreen;
+import com.brentaureli.mariobros.Sprites.Enemies.Enemy;
+import com.brentaureli.mariobros.Sprites.Enemies.Turtle;
 import com.brentaureli.mariobros.Sprites.Other.FireBall;
-import com.brentaureli.mariobros.Sprites.Enemies.*;
 
 /**
  * Created by brentaureli on 8/27/15.
@@ -53,6 +53,10 @@ public class Mario extends Sprite {
 
     private Array<FireBall> fireballs;
     private Vector2 startPosition;
+    private boolean kickingInProgress = false;
+    private boolean kickingfinished = false;
+    Vector2 touchPoint= new Vector2(-1,-1);
+
     public Mario(PlayScreen screen){
         //initialize default values
         this.screen = screen;
@@ -122,13 +126,29 @@ public class Mario extends Sprite {
         //update sprite with the correct frame depending on marios current action
         if(Gdx.input.isTouched())
         {
-            Vector2 touchPoint = new Vector2(Gdx.input.getX()/MarioBros.PPM,Gdx.input.getY()/MarioBros.PPM);
+            kickingInProgress = true;
+            kickingfinished = false;
+            touchPoint = new Vector2(Gdx.input.getX(),Gdx.input.getY());
           //  b2body.applyLinearImpulse(startPosition, touchPoint, true);
-            System.out.print("touch point " + touchPoint.x + " " + touchPoint.y);
+            System.out.println("touch point " + touchPoint.x + " " + touchPoint.y);
             //b2body.setLinearVelocity(touchPoint);
-            b2body.setTransform(new Vector2(1,1),0);
+            b2body.setTransform(new Vector2(touchPoint.x/MarioBros.PPM,1),0);
+            b2body.setLinearVelocity(new Vector2(0,0));
+//            b2body.setTransform(touchPoint,0);
+            float x = touchPoint.x - b2body.getWorldCenter().x*MarioBros.PPM;
+            float y =MarioBros.V_HEIGHT- touchPoint.y;// - b2body.getWorldCenter().y*MarioBros.PPM;
+            //System.out.println("x y : " + x + " " + y);
+            b2body.applyLinearImpulse(new Vector2(0,y*2.5f),b2body.getWorldCenter(),false);
         }
+        if(b2body!=null) {
+            System.out.println("b2body position " + b2body.getPosition().y);
 
+            if (b2body.getPosition().y*100+getHeight() >= touchPoint.y && kickingInProgress) kickingfinished = true;
+            if (kickingfinished) {
+                b2body.setTransform(-1, -1, 0);
+                kickingInProgress = false;
+            }
+        }
     }
 
 
@@ -194,8 +214,9 @@ public class Mario extends Sprite {
         b2body = world.createBody(bdef);
         FixtureDef fdef = new FixtureDef();
         CircleShape shape = new CircleShape();
-        shape.setRadius(32 / MarioBros.PPM);
+        shape.setRadius(16 / MarioBros.PPM);
         fdef.density = 30;
+        fdef.restitution = 0.5f;
         fdef.filter.categoryBits = MarioBros.MARIO_BIT;
         fdef.filter.maskBits = MarioBros.GROUND_BIT |
                 MarioBros.BRICK_BIT ;

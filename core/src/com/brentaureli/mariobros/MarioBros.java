@@ -5,14 +5,13 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.physics.box2d.Filter;
 import com.brentaureli.mariobros.Screens.PlayScreen;
 
 public class MarioBros extends Game {
 	//Virtual Screen size and Box2D Scale(Pixels Per Meter)
 	public static final int V_WIDTH = 30*16;
 	public static final int V_HEIGHT = 50*16;
-	public static final float PPM = 100;
+	public static final float PPM = 50;
 
 	//Box2D Collision Bits
 	public static final short NOTHING_BIT = 0;

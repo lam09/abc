@@ -1,7 +1,6 @@
 package com.brentaureli.mariobros.Screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
@@ -19,15 +18,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.brentaureli.mariobros.MarioBros;
 import com.brentaureli.mariobros.Scenes.Hud;
 import com.brentaureli.mariobros.Sprites.Ball;
-import com.brentaureli.mariobros.Sprites.Enemies.Enemy;
 import com.brentaureli.mariobros.Sprites.Items.Item;
 import com.brentaureli.mariobros.Sprites.Items.ItemDef;
 import com.brentaureli.mariobros.Sprites.Items.Mushroom;
-import com.brentaureli.mariobros.Sprites.Mario;
 import com.brentaureli.mariobros.Tools.B2WorldCreator;
 import com.brentaureli.mariobros.Tools.WorldContactListener;
 
-import java.util.PriorityQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -55,7 +51,7 @@ public class PlayScreen implements Screen{
     private B2WorldCreator creator;
 
     //sprites
-    private Mario player;
+    private Ball player;
     private Ball ball;
 
     private Music music;
@@ -86,14 +82,14 @@ public class PlayScreen implements Screen{
         gamecam.position.set(gamePort.getWorldWidth() / 2, gamePort.getWorldHeight() / 2, 0);
 
         //create our Box2D world, setting no gravity in X, -10 gravity in Y, and allow bodies to sleep
-        world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, -15), true);
         //allows for debug lines of our box2d world.
         b2dr = new Box2DDebugRenderer();
 
         creator = new B2WorldCreator(this);
 
         //create mario in our game world
-        player = new Mario(this);
+        player = new Ball(this);
     //player.setPosition(MarioBros.V_WIDTH/2,MarioBros.V_HEIGHT);
         ball = new Ball(this);
         world.setContactListener(new WorldContactListener());
@@ -134,7 +130,7 @@ public class PlayScreen implements Screen{
 
     public void handleInput(float dt){
         //control our player using immediate impulses
-        if(player.currentState != Mario.State.DEAD) {
+/*        if(player.currentState != Mario.State.DEAD) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
                 player.jump();
             if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && player.b2body.getLinearVelocity().x <= 2)
@@ -143,7 +139,7 @@ public class PlayScreen implements Screen{
                 player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
 
         }
-
+*/
     }
 
     public void update(float dt){
@@ -218,9 +214,9 @@ public class PlayScreen implements Screen{
     }
 
     public boolean gameOver(){
-        if(player.currentState == Mario.State.DEAD && player.getStateTimer() > 3){
+    /*    if(player.currentState == Mario.State.DEAD && player.getStateTimer() > 3){
             return true;
-        }
+        }*/
         return false;
     }
 
