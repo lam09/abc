@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -51,18 +52,18 @@ public class PlayScreen implements Screen{
     private B2WorldCreator creator;
 
     //sprites
-    private Ball player;
+   // private Ball player;
     private Ball ball;
-
+    private Array<Ball> balls;
     private Music music;
 
     private Array<Item> items;
     private LinkedBlockingQueue<ItemDef> itemsToSpawn;
 
-
+    private Texture bgtexture;
     public PlayScreen(MarioBros game){
         atlas = new TextureAtlas("Mario_and_Enemies.pack");
-
+        bgtexture = MarioBros.manager.get("bg.jpg", Texture.class);
         this.game = game;
         //create cam used to follow mario through cam world
         gamecam = new OrthographicCamera();
@@ -89,7 +90,7 @@ public class PlayScreen implements Screen{
         creator = new B2WorldCreator(this);
 
         //create mario in our game world
-        player = new Ball(this);
+        //player = new Ball(this);
     //player.setPosition(MarioBros.V_WIDTH/2,MarioBros.V_HEIGHT);
         ball = new Ball(this);
         world.setContactListener(new WorldContactListener());
@@ -100,6 +101,8 @@ public class PlayScreen implements Screen{
         //music.play();
 
         items = new Array<Item>();
+        balls = new Array<Ball>();
+        balls.add(ball);
         itemsToSpawn = new LinkedBlockingQueue<ItemDef>();
     }
 
@@ -141,7 +144,15 @@ public class PlayScreen implements Screen{
         }
 */
     }
-
+    Integer timeToCreateNewBall = 5;
+    private void createNewBall(){
+        if(Hud.worldTimer>=timeToCreateNewBall)
+        {
+            timeToCreateNewBall+=15;
+            Ball ba = new Ball(this);
+            balls.add(ba);
+        }
+    }
     public void update(float dt){
         //handle user input first
         handleInput(dt);
@@ -149,9 +160,11 @@ public class PlayScreen implements Screen{
 
         //takes 1 step in the physics simulation(60 times per second)
         world.step(1 / 60f, 6, 2);
-
-        player.update(dt);
-        ball.update(dt);
+        createNewBall();
+        //player.update(dt);
+        for (Ball ba:balls)
+        ba.update(dt);
+//        ball.update(dt);
  /*       for(Enemy enemy : creator.getEnemies()) {
             enemy.update(dt);
             if(enemy.getX() < player.getX() + 224 / MarioBros.PPM) {
@@ -185,7 +198,9 @@ public class PlayScreen implements Screen{
         //Clear the game screen with Black
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        game.batch.begin();
+        game.batch.draw(bgtexture,0,0,MarioBros.V_WIDTH,MarioBros.V_HEIGHT);
+        game.batch.end();
         //render our game map
         renderer.render();
 
@@ -194,8 +209,10 @@ public class PlayScreen implements Screen{
 
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();
-        player.draw(game.batch);
+       // player.draw(game.batch);
         ball.draw(game.batch);
+        for(Ball ba:balls)
+                ba.draw(game.batch);
  /*       for (Enemy enemy : creator.getEnemies())
             enemy.draw(game.batch);
         for (Item item : items)
