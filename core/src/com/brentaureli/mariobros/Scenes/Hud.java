@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.brentaureli.mariobros.MarioBros;
+import com.brentaureli.mariobros.Screens.PlayScreen;
 import com.brentaureli.mariobros.Sprites.Ball;
 
 /**
@@ -61,8 +62,8 @@ public class Hud implements Disposable{
         countdownLabel = new Label(worldTimer.toString(), new Label.LabelStyle(font, Color.WHITE));
         scoreLabel =new Label(Ball.ballNumber.toString(), new Label.LabelStyle(font, Color.WHITE));
         timeLabel = new Label("TIME", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
-        levelLabel = new Label("1-1", new Label.LabelStyle(font, Color.WHITE));
-        worldLabel = new Label("STAGE", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
+        levelLabel = new Label("0", new Label.LabelStyle(font, Color.WHITE));
+        worldLabel = new Label("HIGHTSCORE", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
         marioLabel = new Label("BALL", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
 
         //add our labels to our table, padding the top, and giving them all equal width with expandX
@@ -92,7 +93,7 @@ public class Hud implements Disposable{
             timeCount = 0;
         }
         scoreLabel.setText(Ball.ballNumber.toString());
-
+        levelLabel.setText(PlayScreen.hightscore.toString());
     }
 
     public static void addScore(int value){

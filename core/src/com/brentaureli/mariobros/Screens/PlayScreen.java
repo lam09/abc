@@ -3,9 +3,11 @@ package com.brentaureli.mariobros.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -32,6 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class PlayScreen implements Screen{
     //Reference to our Game, used to set Screens
+    public static Integer hightscore = 0;
     private MarioBros game;
     private TextureAtlas atlas;
     public static boolean alreadyDestroyed = false;
@@ -40,7 +43,7 @@ public class PlayScreen implements Screen{
     private OrthographicCamera gamecam;
     private Viewport gamePort;
     private Hud hud;
-
+    public Sound sound;
     //Tiled map variables
     private TmxMapLoader maploader;
     private TiledMap map;
@@ -59,11 +62,14 @@ public class PlayScreen implements Screen{
 
     private Array<Item> items;
     private LinkedBlockingQueue<ItemDef> itemsToSpawn;
-
+    public int states = State.MENU; // 0 - menu 1 - playing 2 gameover
     private Texture bgtexture;
+    private BitmapFont info_font;
     public PlayScreen(MarioBros game){
         atlas = new TextureAtlas("Mario_and_Enemies.pack");
         bgtexture = MarioBros.manager.get("bg.jpg", Texture.class);
+        sound = MarioBros.manager.get("audio/sounds/ballTouch.mp3",Sound.class);
+        info_font = MarioBros.manager.get("Font/info_white.fnt",BitmapFont.class);
         this.game = game;
         //create cam used to follow mario through cam world
         gamecam = new OrthographicCamera();
@@ -92,7 +98,7 @@ public class PlayScreen implements Screen{
         //create mario in our game world
         //player = new Ball(this);
     //player.setPosition(MarioBros.V_WIDTH/2,MarioBros.V_HEIGHT);
-        ball = new Ball(this);
+       // ball = new Ball(this);
         world.setContactListener(new WorldContactListener());
 
         music = MarioBros.manager.get("audio/music/mario_music.ogg", Music.class);
@@ -102,7 +108,7 @@ public class PlayScreen implements Screen{
 
         items = new Array<Item>();
         balls = new Array<Ball>();
-        balls.add(ball);
+        //balls.add(ball);
         itemsToSpawn = new LinkedBlockingQueue<ItemDef>();
     }
 
@@ -132,21 +138,25 @@ public class PlayScreen implements Screen{
     }
 
     public void handleInput(float dt){
-        //control our player using immediate impulses
-/*        if(player.currentState != Mario.State.DEAD) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.UP))
-                player.jump();
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && player.b2body.getLinearVelocity().x <= 2)
-                player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && player.b2body.getLinearVelocity().x >= -2)
-                player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
-
+        if(states == State.MENU && Gdx.input.justTouched()) states = State.PLAYING;
+        if(states==State.GAMEOVER) {
+            System.out.print("GAME OVER");
+            if(Hud.worldTimer > hightscore) hightscore = Hud.worldTimer;
+            for(Ball ba:balls)
+            {
+                ba.remove();
+            }
+            balls.clear();
+            Ball.ballNumber = 0;
+            Hud.worldTimer = 0;
+            timeToCreateNewBall=0;
+            states= State.MENU;
+           // createNewBall();
         }
-*/
     }
-    Integer timeToCreateNewBall = 5;
+    Integer timeToCreateNewBall = 0;
     private void createNewBall(){
-        if(Hud.worldTimer>=timeToCreateNewBall)
+        if(Hud.worldTimer>=timeToCreateNewBall && Ball.ballNumber<=2)
         {
             timeToCreateNewBall+=15;
             Ball ba = new Ball(this);
@@ -158,12 +168,16 @@ public class PlayScreen implements Screen{
         handleInput(dt);
         handleSpawningItems();
 
-        //takes 1 step in the physics simulation(60 times per second)
-        world.step(1 / 60f, 6, 2);
-        createNewBall();
-        //player.update(dt);
-        for (Ball ba:balls)
-        ba.update(dt);
+        if(states == State.PLAYING) {
+            world.step(1 / 60f, 6, 2);
+            createNewBall();
+            //player.update(dt);
+            if(balls!= null)
+            for (Ball ba : balls)
+                ba.update(dt);
+            hud.update(dt);
+
+        }
 //        ball.update(dt);
  /*       for(Enemy enemy : creator.getEnemies()) {
             enemy.update(dt);
@@ -172,10 +186,7 @@ public class PlayScreen implements Screen{
             }
         }
 */
-        for(Item item : items)
-            item.update(dt);
 
-        hud.update(dt);
 
         //attach our gamecam to our players.x coordinate
      /*   if(player.currentState != Mario.State.DEAD) {
@@ -200,23 +211,24 @@ public class PlayScreen implements Screen{
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         game.batch.begin();
         game.batch.draw(bgtexture,0,0,MarioBros.V_WIDTH,MarioBros.V_HEIGHT);
+        if(states==State.MENU)
+            info_font.draw(game.batch,"> TOUCH TO PLAY <",30,500);
         game.batch.end();
         //render our game map
         renderer.render();
 
         //renderer our Box2DDebugLines
+        if(states==State.PLAYING)
         b2dr.render(world, gamecam.combined);
 
         game.batch.setProjectionMatrix(gamecam.combined);
         game.batch.begin();
        // player.draw(game.batch);
-        ball.draw(game.batch);
-        for(Ball ba:balls)
-                ba.draw(game.batch);
- /*       for (Enemy enemy : creator.getEnemies())
-            enemy.draw(game.batch);
-        for (Item item : items)
-            item.draw(game.batch);*/
+      //  ball.draw(game.batch);
+        if(states==State.PLAYING) {
+            for (int i = 0 ; i <balls.size;i++)
+                balls.get(i).draw(game.batch);
+        }
         game.batch.end();
 
         //Set our batch to now draw what the Hud camera sees.

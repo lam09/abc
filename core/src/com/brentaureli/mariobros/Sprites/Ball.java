@@ -1,6 +1,8 @@
 package com.brentaureli.mariobros.Sprites;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -8,10 +10,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.brentaureli.mariobros.MarioBros;
 import com.brentaureli.mariobros.Screens.PlayScreen;
+import com.brentaureli.mariobros.Screens.State;
 
 import java.util.Random;
 
@@ -27,10 +31,14 @@ public class Ball extends Sprite {
     private PlayScreen screen;
     private Texture texture;
     private Random rand;
+    private Sound sound;
+    private Fixture fix;
     public Ball(PlayScreen screen)
     {
         this.world = screen.getWorld();
         this.screen = screen;
+        this.sound = screen.sound;
+
         rand = new Random();
         texture = new Texture(Gdx.files.internal("ball/03.png"));
         defineBall();
@@ -64,6 +72,8 @@ public class Ball extends Sprite {
             if(touchPoint.x > b2body.getPosition().x - radius &&touchPoint.x < b2body.getPosition().x + radius
                && touchPoint.y > b2body.getPosition().y - radius &&touchPoint.y < b2body.getPosition().y + radius
                     ) {
+                screen.sound.stop();
+                screen.sound.play();
                 float x  =  b2body.getWorldCenter().x - touchPoint.x;
                 float y = touchPoint.y - b2body.getWorldCenter().y;
                 b2body.setLinearVelocity(new Vector2(0, 0));
@@ -72,7 +82,7 @@ public class Ball extends Sprite {
                 b2body.applyForce(new Vector2(x * 300,2000 + y*1000), tou, true);
             }
         }
-
+        if(b2body.getPosition().y<=1.5) screen.states = State.GAMEOVER;
     }
     private void defineBall()
     {
@@ -97,7 +107,12 @@ public class Ball extends Sprite {
         fdef.friction = 0.6f;
         fdef.restitution = 0.7f;
         fdef.density = 0.8f;
-        b2body.createFixture(fdef).setUserData(this);
+        fix = b2body.createFixture(fdef);
+        fix.setUserData(this);
+    }
+    public void remove(){
+        b2body.destroyFixture(fix);
+        world.destroyBody(b2body);
     }
     public void draw(Batch batch){
         super.draw(batch);

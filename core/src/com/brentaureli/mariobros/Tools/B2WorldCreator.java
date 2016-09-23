@@ -14,6 +14,7 @@ import com.brentaureli.mariobros.MarioBros;
 import com.brentaureli.mariobros.Screens.PlayScreen;
 import com.brentaureli.mariobros.Sprites.Enemies.Enemy;
 import com.brentaureli.mariobros.Sprites.Enemies.Turtle;
+import com.brentaureli.mariobros.Sprites.Roof;
 import com.brentaureli.mariobros.Sprites.TileObjects.Brick;
 import com.brentaureli.mariobros.Sprites.TileObjects.Coin;
 import com.brentaureli.mariobros.Sprites.Enemies.Goomba;
@@ -24,6 +25,7 @@ import com.brentaureli.mariobros.Sprites.Enemies.Goomba;
 public class B2WorldCreator {
     private Array<Goomba> goombas;
     private Array<Turtle> turtles;
+    private Roof roof;
 
     public B2WorldCreator(PlayScreen screen){
         World world = screen.getWorld();
@@ -48,7 +50,16 @@ public class B2WorldCreator {
             fdef.restitution = 0.01f;
             body.createFixture(fdef);
         }
+        Rectangle rect = ((RectangleMapObject)map.getLayers().get(2).getObjects().get(0)).getRectangle();
+        bdef.type = BodyDef.BodyType.StaticBody;
+        bdef.position.set((rect.getX() + rect.getWidth() / 2) / MarioBros.PPM, (rect.getY() + rect.getHeight() / 2) / MarioBros.PPM);
 
+        body = world.createBody(bdef);
+
+        shape.setAsBox(rect.getWidth() / 2 / MarioBros.PPM, rect.getHeight() / 2 / MarioBros.PPM);
+        fdef.shape = shape;
+        fdef.restitution = 0.01f;
+        body.createFixture(fdef);
         //create pipe bodies/fixtures
   /*      for(MapObject object : map.getLayers().get(3).getObjects().getByType(RectangleMapObject.class)){
             Rectangle rect = ((RectangleMapObject) object).getRectangle();
